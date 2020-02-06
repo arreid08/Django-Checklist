@@ -17,225 +17,132 @@
 ### Start the Django Project
 - [ ] `django-admin startproject tunr_django .` - the . on the end will create the project without creating a subfolder. 
 - [ ] Create our app: `django-admin startapp tunr` (tunr should be changed to the name of your app)
-- [ ] 
-- [ ] 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
-</head>
-<body>
-  {{{ body }}}
-</body>
-</html>
+
+## Create Database
+
+- [ ] `psql -d postgres` - to enter PostgreSQL
+- [ ] Create a database: `CREATE DATATBASE _____;` (fill in the blank with your database name)
+- [ ] Create a dummy login: `CREATE USER ______ WITH PASSWORD '____';`  (fill in the blanks with your username and password)
+- [ ] Grant privileges to your user: `GRANT ALL PRIVILEGES ON DATABASE _____ TO ____;`  (the first blank is your database name, the second is your username)
+- [ ] You can now exit psql: `\q`
+- [ ] Since you are using PostgreSQL, you will need update your settings.py file.  Fill in the blanks accordingly
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': '____',
+        'USER': '____',
+        'PASSWORD': '____',
+        'HOST': 'localhost'
+    }
+}
+```
+- [ ] Finally at the end of the INSTALLED_APPS section, add a new line with your app name.
+- [ ] Back in the terminal run: `python3 manage.py runserver`
+- [ ] Navigate in your browser to: `localhost:8000` to see the Django welcome page
+
+## Define a Model
+
+- [ ] Within your file structure, you should see a file called `models.py`.  Below is an example model.
+```python
+class Artist(models.Model):
+    name = models.CharField(max_length=100)
+    nationality = models.CharField(max_length=100)
+    photo_url = models.TextField()
+
+    def __str__(self):
+        return self.name
 ```
 
-## Connect to MongoDB
+## Migrate your Model
 
-- [ ] `npm install mongoose`
-- [ ] Create a `connection.js` file in the `db/` directory
-- [ ] Require mongoose in the `connection` file
-- [ ] Connect to your database: `mongoose.connect('mongodb://localhost/db_name')`
-- [ ] Set the promise library: `mongoose.Promise = Promise` if you are using an older Mongoose version than v5.
-- [ ] Export your setup mongoose: `module.exports = mongoose`
+- [ ] In your terminal type: `python manage.py makemigrations`.  This will generate a file that gets all of it's data from the code in the `models.py` file.  The new file will be called `0001_initial.py`
+- [ ] Every time you make changes to the `models.py` file, you will need to run the above command.
+- [ ] Once you are done with your changes, you will run: `python manage.py migrate`
+- [ ] You can check that your database now shows your new tables.
 
-## Define a Schema + Model
+## Create a SuperUser for the Admin Console
 
-- [ ] Create a file with your model's name in `models/`
-- [ ] Import mongoose from your connection file: `const mongoose = require("../db/connection")`
-- [ ] Create your schema and set it to a variable.
-```js
-const mySchema = new mongoose.Schema({
-  field: DataType,
-})
+- [ ] In your terminal: `python manage.py createsuperuser`
+- [ ] You will be prompted to create a username and password.  You want this to be a real login for the superuser so take note.
+- [ ] In the `admin.py` file, you can now add the admin info
+```python
+    from django.contrib import admin
+    from .models import Artist
+
+    admin.site.register(Artist)
 ```
-- [ ] Create a model with your schema: `const myModel = mongoose.model("modelName", mySchema)`
-- [ ] Export your model: `module.exports = myModel`
+- [ ] Test the work in your browser: `localhost:8000/admin`
+- [ ] You should have access to everything!
 
-## Seed your DataBase
+## Django Extensions
 
-- [ ] Create `db/seed.js`
-- [ ] Import your schema from your model file: `const myModel = require('../models/myModel')`
-- [ ] Create your seed data in JSON format in `db/seeds.json`
-- [ ] Import your seed data into your `seed.js` file: `const seedData = require("./seeds.json")`
-- [ ] Remove all of the items currently in your database: `myModel.remove({})`
-- [ ] Insert your seeds into your database within the `.then` method.
-- [ ] Exit the seeding process in another `.then` method.
-```js
-myModel.deleteMany({})
-  .then(() => {
-    return myModel.insertMany(seedData)
-  })
-  .then(() => {
-    process.exit()
-  })
+- [ ] In your Terminal `pip install django-extensions`
+- [ ] Add `django_extensions` to your `INSTALLED_APPS` list:
+```python
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'tunr',
+    'django_extensions'
+]
 ```
-- [ ] Run your seed file in the terminal: `$ node db/seed.js`
-- [ ] Check to see if the items were inserted using the Mongo CLI.
-  - [ ] Run `$ mongo` to enter the Mongo CLI
-  - [ ] Run `> use my_database` and `db.my_collection.find()` to see your items
+- [ ] Now you can run `python manage.py shell_plus` to get the python shell
+- [ ] Install ipython to create a nicer interface: `pip install ipython`
+- [ ] You can now run the python shell to test and run within your terminal: `python manage.py shell_plus --ipython`
+- [ ] Example queries/inputs:
+```bash
+# Select all of the artist objects in the database
+Artist.objects.all()
 
-## Set Up your Controller
+# Select All Objects and Print All Values
+Artist.objects.all().values_list()
 
-- [ ] Create a controller file: `controllers/myItems.js`
-- [ ] Require your controller in `index.js`: `const myController = require('./controllers/myController')`
-- [ ] Use your controller **below any other configuration**: `app.use("/myUrlPrefix", myController)`
-- [ ] Require Express in your controller file: `const express = require("express")`
-- [ ] Create a router instance in your controller file: `const router = express.Router()`
-- [ ] Import your model: `const myModel = require('../models/myModel')`
-- [ ] Export your router instance at the very bottom of the file: `module.exports = router`
+# Select All Objects and Print Specific Value
+Artist.objects.all().values_list('nationality')
 
-## Create your Index Route
+# Get the artist with the id of 1 (can also do pk here which stands for primary key)
+Artist.objects.get(id=1)
 
-- [ ] Setup a GET handler for the '/' route: `router.get("/", (req, res) => {})`
-- [ ] In the body of the GET handler, find all of the instances of your model: `myModel.find({})`
-- [ ] Once the items are returned from your database, render your index view: `res.render('index', { myInstances })`
-```js
-router.get("/", (req, res) => {
-  myModel.find({}).then(myInstances => res.render('index', { myInstances }))
-})
+# Get the artist with the name "Kanye West", if there are two Kanye's this will error!
+Artist.objects.get(name="Kanye West")
+
+# Get all the Artists who are from the USA
+Artist.objects.filter(nationality="USA")
+
+# Store an artist in a variable for later access:
+p = Artist.objects.find(name="Prince")
+
+# Now you can look up the artist's songs:
+p.songs.all()
+p.songs.all().values_list()
+
+# Create an Artist with the following attributes, then save, commiting it to the database
+kanye = Artist(name="Kane West", photo_url="test.com", nationality="USA")
+kanye.save()
+
+# Oops, we misspelled Kanye's name! Let's change it and then commit to the DB
+kanye.name = "Kanye West"
+kanye.save()
+
+# Let's add a song to the artist
+song = Song(title="Ultralight Beam", album="The Life of Pablo", preview_url="test.com", artist=kanye)
+song.save()
+
+# Delete the song
+song.delete()
 ```
-- [ ] Create your view file: `views/index.hbs`
-- [ ] Create your view template with Handlebars:
-```hbs
-<h1>myModel</h1>
+- [ ] Check out more neat stuff you can do with `shell_plus` [here](https://django-extensions.readthedocs.io/en/latest/shell_plus.html)
 
-<ul>
-  {{#each myInstances as |myInstance|}}
-    <li>
-      {{myInstance.attribute}}
-    </li>
-  {{/each}}
-</ul>
-```
 
-## Create your Show Route
-
-- [ ] Setup a GET handler for the '/:id' route: `router.get("/:id", (req, res) => {})`
-- [ ] In the body of the GET handler, find an instance of your model: `myModel.findOne({ _id: req.params.id })`
-- [ ] Once the items are returned from your database, render your index view: `res.render('show', { myInstance })`
-```js
-router.get("/:id", (req, res) => {
-  myModel.findOne({ _id: req.params.id }).then(myInstance => res.render('show', { myInstance }))
-})
-```
-- [ ] Create your view file: `views/show.hbs`
-- [ ] Create your view template with Handlebars:
-```hbs
-<h1>myModel</h1>
-
-<h2>{{ myInstance.attribute }}</h2>
-```
-
-## Create your New Route
-
-- [ ] Setup a GET handler to display the form at '/new' route: `router.get("/:id", (req, res) => {})` **note: put this above your `/:id` route!**
-```js
-router.get('/new', (req, res) => {
-  res.render('new')
-})
-```
-- [ ] Install body-parser: `$ npm install body-parser`
-- [ ] Require body-parser in your `index.js`: `const parser = require('body-parser')`
-- [ ] Setup body-parser in your `index.js`: `const parser = app.use(parser.urlencoded({ extended: true }))` **note: put this above where you `use` your controllers!**
-- [ ] Create your view file for your form: `views/new.hbs`
-- [ ] Create your view template with Handlebars:
-```html
-<h2>New Instance:</h2>
-
-<form action="/" method="post" accept-charset="utf-8">
-  <p>
-    <label>myField:</label>
-    <input type="text" name="myField"/>
-  </p>
-  <input type="submit" value="Create" />
-</form>
-```
-- [ ] Setup a POST handler for your post reqest to create a new item at url `/`: `router.post("/", (req, res) => {})`
-- [ ] In the body of the POST handler, create an instance of your model with the data from the form: `myModel.create(req.body)`
-- [ ] Once the items are returned from your database, redirect to your home page: `res.redirect('/')`
-```js
-router.post('/', (req, res) => {
-  myModel.create(req.body)
-    .then(myNewItem => {
-      res.redirect('/')
-    })
-})
-```
-
-## Create your Update Route
-
-- [ ] Install method-override: `$ npm install method-override`
-- [ ] Require `method-override` in your `index.js`: `const methodOverride = require('method-override')`
-- [ ] Set up `method-override` in your `index.js`: `app.use(methodOverride('_method'))` **note: make sure this is above where you use your controller!**
-- [ ] Create a route to render your `edit` form: `router.get('/edit/:id', (req, res) => {})`
-- [ ] Find the item you want to edit in your database: `myModel.findOne({_id: req.params.id})`
-- [ ] Render the form: `res.render('edit', { myInstance })`
-```js
-router.get('/edit/:id', (req, res) => {
-  myModel.findOne({_id: req.params.id})
-    .then(instance => {
-      res.render("edit", { myInstance })
-    })
-})
-```
-- [ ] Create a form using handlebars for editing your item in `edit.hbs`
-```hbs
-<h2>Edit Item:</h2>
-
-<form action="/{{myInstance.id}}?_method=put" method="post">
-  <p>
-    <label>Attribute:</label>
-    <input type="text" value="{{myInstance.attribute}}" name="attribute"/>
-  </p>
-  <input type="submit" value="Update" />
-</form>
-
-```
-- [ ] Create a route to edit the item in the database: `router.put('/:id', (req, res) => {})`
-- [ ] Find an item in the database and edit it: `myModel.findOneandUpdate({_id: req.params.id}, req.body, { new: true })`
-- [ ] Redirect to the home page: `res.redirect('/')`
-```js
-router.put('/:id', (req, res) => {
-  myModel.findOneAndUpdate({_id: req.params.id}, req.body, { new: true })
-    .then(myInstance => {
-      res.redirect('/')
-    })
-})
-```
-
-## Create your Delete Route
-
-- [ ] Create your delete route: `router.delete(':id', (req, res) => {})`
-- [ ] Remove the item from the database: `myModel.findOneAndRemove({ _id: req.params.id })`
-- [ ] Redirect to the home page: `res.redirect('/')`
-```js
-router.delete('/:id', (req, res) => {
-  myModel.findOneAndRemove({ _id: req.params.id })
-    .then(() => {
-      res.redirect('/')
-    })
-})
-```
-- [ ] Add a form to delete your item in `edit.hbs`
-```hbs
-<form action="/{{myInstance.id}}?_method=delete" method="post">
-  <input type="submit" value="Remove">
-</form>
-```
-
-### Bonus: Set up CSS
-
-- [ ] Create a `public/` folder with a `css/` subdirectory within it
-- [ ] Create a `styles.css` file within `/public/css` and add your styling
-- [ ] Host your `public/` folder: `app.use('/assets', express.static('public'))`
-- [ ] Include your CSS in the head of your `views/layout.hbs` file: `<link rel="stylesheet" href="/assets/css/styles.css" />`
-
-### Read More!
-
-* [Lesson Plan](https://git.generalassemb.ly/ga-wdi-lessons/express-mongoose)
-* [ToDo App](https://git.generalassemb.ly/ga-wdi-exercises/express-to-do/tree/solution)
-* [WhenPresident App](https://git.generalassemb.ly/ga-wdi-exercises/w
+## Additional Resources
+* [GA Lesson](https://git.generalassemb.ly/seir-1118/django-models)
+* [Django Admin Documentation](https://docs.djangoproject.com/en/2.1/ref/django-admin/)
+* [Django Models Documentation](https://docs.djangoproject.com/en/2.1/topics/db/models/)
+* [Django Built-In Model Field Types](https://docs.djangoproject.com/en/2.1/ref/models/fields/#model-field-types)
+* [Django Migration Documentation](https://docs.djangoproject.com/en/2.1/topics/migrations/)
+* [Django Seed Data](https://docs.djangoproject.com/en/2.1/howto/initial-data/)

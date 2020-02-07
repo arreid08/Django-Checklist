@@ -7,7 +7,7 @@
 ### Install all dependencies and created our virtual environment
 - [ ] Make a directory for the project
 - [ ] Create a virtual environment `pip3 install virtualenv`
-- [ ] `python3 venv .env` - .env can be named anything you want.
+- [ ] `python3 venv -m .env` - .env can be named anything you want.
 - [ ] `source .env/bin/activate` - this will activate the virtual environment
 - [ ] Don't forget to active each time you work on your project!
 - [ ] You should see your environment name in the line of your terminal (i.e. .env)
@@ -138,6 +138,180 @@ song.delete()
 ```
 - [ ] Check out more neat stuff you can do with `shell_plus` [here](https://django-extensions.readthedocs.io/en/latest/shell_plus.html)
 
+## Creating a View
+- [ ] In `views.py` add a view to pass data to our templates
+- [ ] Here we are creating a new view called artist_list.  This list will return all the artists.  In the render, you can see we are reference an HTML file and passing the values of artists to the HTML file.  We will create the HTML file in a minute.
+```python
+from django.shortcuts import render
+from .models import Artist, Song
+
+def artist_list(request):
+    artists = Artist.objects.all()
+    return render(request, 'tunr/artist_list.html', {'artists': artists})
+```
+
+## Adding a URL
+- [ ] Next we will create a URL to access our view through.  In `urls.py` add the following.  Here you can see the connection to the urls file and this will render at localhost:8000.  the last line will render at localhost:8000/songs/.
+```python
+from django.conf.urls import include
+from django.urls import path
+from django.contrib import admin
+
+urlpatterns = [
+    path('admin', admin.site.urls),
+    path('', include('tunr.urls')),
+    path('songs/', admin.site.urls)
+]
+```
+
+## Creating the Template
+- [ ] In the app folder, create a new folder called templates.  within that folder create another folder called your app name. Finally, create an HTML file matching your above view name.  Per the example referenced here: `artist_list.html`
+- [ ] Within this file, create html to show your info.
+```html
+<ul>
+    {% for artist in artists %}
+        <li>
+            {{ artist.name }}
+        </li>
+    {% endfor %}
+</ul>
+```
+- [ ] You can now run the server and navigate to any path you defined.
+- [ ] Then run your server to see your changes: `python manage.py runserver`
+
+## Base HTML
+- [ ] Here you can create a `base.html` file that will hold you basic page layout and you will then insert each template into that base as you navigate around the webpage.  This file will also be stored in the `templates` folder.
+- [ ] If you create a CSS file, you will link it with the `{% load static %}` and the typical `<link>` tag you see below.
+- [ ] the `{% block content %}{% endblock %}` line is where your other templates will be inserted once they are activated through url.  
+```HTML
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=>, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Tunr</title>
+    <link rel="stylesheet" href="{% static 'css/tunr.css' %}" />
+</head>
+<body>
+    <h1>Tun.r</h1>
+    <nav>
+        <a href="/songs">Songs</a>
+        <a href="/">Artists</a>
+    </nav>
+    {% block content %}{% endblock %}
+</body>
+</html>
+```
+- [ ] In each of your template files, you will need to state that you are adding that block. Note the first two lines and the last line.  the word 'content' can be anything you want but just had to match from base to templates.
+```HTML
+{% extends 'tunr/base.html' %} 
+{% block content %}
+<h1>New Song</h1>
+<form method="POST" class="song-form">
+    {% csrf_token %} {{ form.as_p }}
+    <button type="submit" class="save btn btn-default">Save</button>
+</form>
+{% endblock %}
+```
+
+## CRUD
+### Create
+#### Form
+- [ ] First you will add to the `form.py` file.  Below you can see we pull in the models for each model and are calling the `Meta` class inside of another class.  The `Meta` class is required.  This code is used to verify the form was correctly input by the user.
+```python
+from django import forms
+from .models import Artist, Song
+
+class ArtistForm(forms.ModelForm):
+
+    class Meta:
+        model = Artist
+        fields = ('name', 'photo_url', 'nationality',)
+```
+
+#### Views
+- [ ] In the `views.py` file you will add a new function for create.  The below method will recognize that you are POSTing and then validate the form based on the info in the `form.py` file.  Then it will save the new artist for you.  Finally it will redirect you to the artist detail page based on the id(pk is primary key so as not to interfere with id) of that artist.
+- [ ] Be sure to add redirect at the top.
+```python
+from django.shortcuts import render, redirect
+from .forms import ArtistForm
+def artist_create(request):
+    if request.method == 'POST':
+        form = ArtistForm(request.POST)
+        if form.is_valid():
+            artist = form.save()
+            return redirect('artist_detail', pk=artist.pk)
+    else:
+        form = ArtistForm()
+    return render(request, 'tunr/artist_form.html', {'form': form})
+```
+
+#### URL
+- [ ] In the `urls.py` file we will add another new line for the new path.  As you can see, you create the path you want for creating a new artist, link it to the function you created above in the `views.py` file and finally name it.
+```python
+path('artists/new', views.artist_create, name='artist_create'),
+```
+
+#### Template
+- [ ] Create a new HTML file for the form.  Named `artist_form.html` for this example.
+- [ ] the `csrf_token` is what brings in the form. and the `form.as_p` wraps everything in a paragraph tag.
+- [ ] You can now go to your list page to update/create a link to this new page.
+```HTML
+{% extends 'tunr/base.html' %} {% block content %}
+<h1>New Artist</h1>
+<form method="POST" class="artist-form">
+  {% csrf_token %} {{ form.as_p }}
+  <button type="submit" class="save btn btn-default">Save</button>
+</form>
+{% endblock %}
+```
+
+### Edit
+- [ ] Edit is very similar to create with a few simple differences.
+
+#### View
+- [ ] `view.py` As you can see below there is only a little bit of changes.
+- [ ] The first difference here is that we are adding in our primary key so we only edit the one we want. 
+- [ ] Next we are calling out an instance.  this is again so we are working on that specific artist and not all. 
+```python
+def artist_edit(request, pk):
+    artist = Artist.objects.get(pk=pk)
+    if request.method == "POST":
+        form = ArtistForm(request.POST, instance=artist)
+        if form.is_valid():
+            artist = form.save()
+            return redirect('artist_detail', pk=artist.pk)
+    else:
+        form = ArtistForm(instance=artist)
+    return render(request, 'tunr/artist_form.html', {'form': form})
+```
+#### URL
+- [ ] Here is an example of the edit url for the `urls.py` file.
+```python
+path('artists/<int:pk>/edit', views.artist_edit, name='artist_edit'),
+```
+
+#### Template
+- [ ] again, you only need to update the HTML if you want it to look differently
+
+### Delete
+#### View
+- [ ] `view.py` here is an example for delete.
+```python
+def artist_delete(request, pk):
+    Artist.objects.get(id=pk).delete()
+    return redirect('artist_list')
+```
+
+#### URL
+- [ ] Here is an example of the delete url for the `urls.py` file.
+```python
+path('artists/<int:pk>/delete', views.artist_delete, name='artist_delete'),
+```
+
+
 
 ## Additional Resources
 * [GA Lesson](https://git.generalassemb.ly/seir-1118/django-models)
@@ -146,3 +320,4 @@ song.delete()
 * [Django Built-In Model Field Types](https://docs.djangoproject.com/en/2.1/ref/models/fields/#model-field-types)
 * [Django Migration Documentation](https://docs.djangoproject.com/en/2.1/topics/migrations/)
 * [Django Seed Data](https://docs.djangoproject.com/en/2.1/howto/initial-data/)
+* [Django Model Meta Options](https://docs.djangoproject.com/en/1.11/ref/models/options/)

@@ -15,8 +15,8 @@
 - [ ] Install the library for connection Django to PostgreSQL`pip install psycopg2-binary`
 
 ### Start the Django Project
-- [ ] `django-admin startproject tunr_django .` - the . on the end will create the project without creating a subfolder. 
-- [ ] Create our app: `django-admin startapp tunr` (tunr should be changed to the name of your app)
+- [ ] `django-admin startproject ____ .` - the . on the end will create the project without creating a subfolder. (fill in the blank with your project name)
+- [ ] Create our app: `django-admin startapp ____` (fill in the blank with your project name)
 
 ## Create Database
 
@@ -87,7 +87,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'tunr',
+    '_____',  (fill in the blank with your project name)
     'django_extensions'
 ]
 ```

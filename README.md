@@ -7,7 +7,7 @@
 ### Install all dependencies and created our virtual environment
 - [ ] Make a directory for the project
 - [ ] Create a virtual environment `pip3 install virtualenv`
-- [ ] `python3 venv -m .env` - .env can be named anything you want.
+- [ ] `python3 -m venv .env` - .env can be named anything you want.
 - [ ] `source .env/bin/activate` - this will activate the virtual environment
 - [ ] Don't forget to active each time you work on your project!
 - [ ] You should see your environment name in the line of your terminal (i.e. .env)

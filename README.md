@@ -14,9 +14,9 @@
 - [ ] Install Django `pip install django`
 - [ ] Install the library for connection Django to PostgreSQL`pip install psycopg2-binary`
 
-### Start the Django Project
+### Start the Django Project and App
 - [ ] `django-admin startproject ____ .` - the . on the end will create the project without creating a subfolder. (fill in the blank with your project name)
-- [ ] Create our app: `django-admin startapp ____` (fill in the blank with your project name)
+- [ ] Create our app: `django-admin startapp ____` (fill in the blank with your app name)
 
 ## Create Database
 
@@ -138,6 +138,18 @@ song.delete()
 ```
 - [ ] Check out more neat stuff you can do with `shell_plus` [here](https://django-extensions.readthedocs.io/en/latest/shell_plus.html)
 
+## Adding the Project URL
+- [ ] Next we will create a URL to access our view through.  In the projects `urls.py` file, add the following.  Here you can see the connection to the urls file and this will render at localhost:8000.  The last line will render at localhost:8000/songs/.
+```python
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin', admin.site.urls),
+    path('', include('_____.urls'))
+]
+```
+
 ## Creating a View
 - [ ] In `views.py` add a view to pass data to our templates
 - [ ] Here we are creating a new view called artist_list.  This list will return all the artists.  In the render, you can see we are reference an HTML file and passing the values of artists to the HTML file.  We will create the HTML file in a minute.
@@ -150,17 +162,14 @@ def artist_list(request):
     return render(request, 'tunr/artist_list.html', {'artists': artists})
 ```
 
-## Adding a URL
-- [ ] Next we will create a URL to access our view through.  In `urls.py` add the following.  Here you can see the connection to the urls file and this will render at localhost:8000.  the last line will render at localhost:8000/songs/.
+## Adding the App URL
+- [ ] Next we will create a URL to access our view through.  In the app folder, create a file called `urls.py`.  Here you set the urls paths for each template view.  Add your view names to the underlines below.
 ```python
-from django.conf.urls import include
 from django.urls import path
-from django.contrib import admin
+from . import views
 
 urlpatterns = [
-    path('admin', admin.site.urls),
-    path('', include('tunr.urls')),
-    path('songs/', admin.site.urls)
+    path('', views.____, name='___'),
 ]
 ```
 
